@@ -75,23 +75,23 @@ void UART0_interruptEnable(UART_ChannelType uartChannel)
 	switch(uartChannel)
 	{
 	case UART_0:
-		NVIC_enableInterruptAndPriotity(UART0_IRQ,PRIORITY_2);
+		UART0->C2 |= UART_C2_RIE_MASK;
 		break;
 	case UART_1:
-			NVIC_enableInterruptAndPriotity(UART1_IRQ,PRIORITY_2);
-			break;
+		UART1->C2 |= UART_C2_RIE_MASK;
+		break;
 	case UART_2:
-			NVIC_enableInterruptAndPriotity(UART2_IRQ,PRIORITY_2);
-			break;
+		UART2->C2 |= UART_C2_RIE_MASK;
+		break;
 	case UART_3:
-			NVIC_enableInterruptAndPriotity(UART3_IRQ,PRIORITY_2);
-			break;
+		UART3->C2 |= UART_C2_RIE_MASK;
+		break;
 	case UART_4:
-			NVIC_enableInterruptAndPriotity(UART4_IRQ,PRIORITY_2);
-			break;
+		UART4->C2 |= UART_C2_RIE_MASK;
+		break;
 	case UART_5:
-			NVIC_enableInterruptAndPriotity(UART5_IRQ,PRIORITY_2);
-			break;
+		UART5->C2 |= UART_C2_RIE_MASK;
+		break;
 
 	}
 }
