@@ -1,73 +1,112 @@
+/*
+ * Copyright 2016-2018 NXP Semiconductor, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * o Redistributions of source code must retain the above copyright notice, this list
+ *   of conditions and the following disclaimer.
+ *
+ * o Redistributions in binary form must reproduce the above copyright notice, this
+ *   list of conditions and the following disclaimer in the documentation and/or
+ *   other materials provided with the distribution.
+ *
+ * o Neither the name of NXP Semiconductor, Inc. nor the names of its
+ *   contributors may be used to endorse or promote products derived from this
+ *   software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+ 
 /**
-	\file
-	\brief
-		This project shows how works the emulation of a VT 100 in teraterm.
-	\author J. Luis Pizano Escalante, luispizano@iteso.mx
-	\date	27/07/2015
-	\todo
-		To implement the UART_init function
+ * @file    UART_test_Project.c
+ * @brief   Application entry point.
+ */
+#include <stdio.h>
+#include "board.h"
+#include "peripherals.h"
+#include "pin_mux.h"
+#include "clock_config.h"
+#include "MK64F12.h"
+#include "fsl_debug_console.h"
+/* TODO: insert other include files here. */
+
+/* TODO: insert other definitions and declarations here. */
+
+/*
+ * @brief   Application entry point.
  */
 
-#include "MK64F12.h" /* include peripheral declarations */
-#include "UART.h"/**UART device driver*/
-#include "NVIC.h"/**NVIC device driver*/
+uint8_t uart_getchar ();
+void put(char *ptr_str);
+void uart_putchar (char ch);
 
-#define DEBUG
+int main(void) {
+	uint16_t ubd;					/*Variable to save the baud rate*/
+	uint8_t temp;
 
-#ifdef DEBUG
-	#include "stdio.h"
-#endif
-/**This is mail box to received the information from the serial port*/
-extern UART_MailBoxType UART0_MailBox;
+	SIM->SCGC4 |= SIM_SCGC4_UART0_MASK; /*Enable the UART clock*/
+	SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK; /*Enable the PORTB clock*/
+	PORTB->PCR[16] |= PORT_PCR_MUX(3);
+	PORTB->PCR[17] |= PORT_PCR_MUX(3);
 
-int main(void)
-{
-	/**Enables the clock of PortB in order to configures TX and RX of UART peripheral*/
-	SIM->SCGC5 = SIM_SCGC5_PORTB_MASK;
-	/**Configures the pin control register of pin16 in PortB as UART RX*/
-	PORTB->PCR[16] = PORT_PCR_MUX(3);
-	/**Configures the pin control register of pin16 in PortB as UART TX*/
-	PORTB->PCR[17]= PORT_PCR_MUX(3);
-	/**Configures UART 0 to transmit/receive at 11520 bauds with a 21 MHz of clock core*/
-	UART_init (UART_0,  21000000, BD_115200);
-	printf("UART is configured");
-	//printf("UART is configured");
-	/**Enables the UART 0 interrupt*/
-	UART0_interruptEnable(UART_0);
-	/**Enables the UART 0 interrupt in the NVIC*/
-	NVIC_enableInterruptAndPriotity(UART0_IRQ, PRIORITY_10);
+	UART0->C2 &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK); /*Disable Tx and Rx*/
+	UART0->C1 = 0; /*Dafault settings of the register*/
 
-	/**The following sentences send strings to PC using the UART_putString function. Also, the string
-	 * is coded with terminal code*/
-	/** VT100 command for text in red and background in cyan*/
-	UART_putString(UART_0,"\033[0;32;46m");
-	/*VT100 command for clearing the screen*/
-	UART_putString(UART_0,"\033[2J");
-	/** VT100 command for text in red and background in green*/
-	UART_putString(UART_0,"\033[0;32;41m");
-	/** VT100 command for positioning the cursor in x and y position*/
-	UART_putString(UART_0,"\033[10;10H");
-	UART_putString(UART_0, "Micros y DSPs\r");
-	/** VT100 command for positioning the cursor in x and y position*/
-	UART_putString(UART_0,"\033[11;10H");
-	UART_putString(UART_0, "    ITESO\r");
-	/** VT100 command for positioning the cursor in x and y position*/
-	UART_putString(UART_0,"\033[12;10H");
+	ubd = (uint16_t) ((21000 * 1000) / (9600 * 16)); /* Calculate baud settings */
 
-	/**Enables interrupts*/
-	EnableInterrupts;
+	temp = UART0->BDH & ~(UART_BDH_SBR(0x1F)); /*Save the value of UART0_BDH except SBR*/
+	UART0->BDH = temp | (((ubd & 0x1F00) >> 8));
+	UART0->BDL = (uint8_t) (ubd & UART_BDL_SBR_MASK);
 
-	for(;;) {	   
+	UART0->C2 |= (UART_C2_TE_MASK | UART_C2_RE_MASK );    /* Enable receiver and transmitter */
 
-		if(UART0_MailBox.flag)
-			{
-				/**Sends to the PCA the received data in the mailbox*/
-				UART_putChar (UART_0, UART0_MailBox.mailBox);
+	uint8_t ch;
+	put("\033[0;32;46m");
+	put("\033[2J");
+	put("\033[0;32;41m");
+	put("\033[10;10H");
+	put("\r\nMicros y DSPs\r\n");
+	put("\033[11;10H");
+	put("\r\nITESO\n");
+	put("\033[12;10H");
 
-				/**clear the reception flag*/
-				UART0_MailBox.flag =0;
-			}
+	while (1) {
+		ch = uart_getchar();
+		uart_putchar(ch);
+		//BLUE_TOGGLE;
 	}
-	
 	return 0;
+}
+
+uint8_t uart_getchar ()
+{
+/* Wait until character has been received */
+while (!(UART0->S1 & UART_S1_RDRF_MASK));
+/* Return the 8-bit data from the receiver */
+return UART0->D;
+}
+
+void uart_putchar (char ch)
+{
+/* Wait until space is available in the FIFO */
+while(!(UART0->S1 & UART_S1_TDRE_MASK));
+/* Send the character */
+UART0->D = (uint8_t)ch;
+}
+
+void put(char *ptr_str)
+{
+	while(*ptr_str)
+		uart_putchar(*ptr_str++);
 }
