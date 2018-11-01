@@ -204,7 +204,6 @@ void UART_putString(UART_ChannelType uartChannel, sint8* string)
 	{
 		case UART_0:
 			/*Transmit data*/
-			/*Preguntar si se puede funcion null*/
 			while(*string)
 			{
 				/*Keeps sending char until ptr is null*/
@@ -254,48 +253,5 @@ void UART_putString(UART_ChannelType uartChannel, sint8* string)
 		default:
 			break;
 
-	}
-}
-
-uint8 UART_getChar(UART_ChannelType uartChannel)
-{
-	switch (uartChannel)
-	{
-	case UART_0:
-		/* Wait until space is available in the FIFO */
-		while (!(UART0->S1 & UART_S1_RDRF_MASK));
-		/* Send the character */
-		return UART0->D;
-		break;
-	case UART_1:
-		/* Wait until space is available in the FIFO */
-		while (!(UART1->S1 & UART_S1_RDRF_MASK));
-		/* Send the character */
-		return UART1->D;
-		break;
-	case UART_2:
-		/* Wait until space is available in the FIFO */
-		while (!(UART2->S1 & UART_S1_RDRF_MASK));
-		/* Send the character */
-		return UART2->D;
-		break;
-	case UART_3:
-		/* Wait until space is available in the FIFO */
-		while (!(UART3->S1 & UART_S1_RDRF_MASK));
-		/* Send the character */
-		return UART3->D;
-		break;
-	case UART_4:
-		/* Wait until space is available in the FIFO */
-		while (!(UART4->S1 & UART_S1_RDRF_MASK));
-		/* Send the character */
-		return UART4->D;
-		break;
-	case UART_5:
-		/* Wait until space is available in the FIFO */
-		while (!(UART5->S1 & UART_S1_RDRF_MASK));
-		/* Send the character */
-		return UART5->D;
-		break;
 	}
 }
