@@ -23,6 +23,9 @@ typedef struct{
 	uint8 mailBox; /** it contains the received data*/
 } UART_MailBoxType;
 
+#define SHIFT8 8
+#define BDH_SBR_MASK 0x1F
+
 
 /**
  * \brief This enum define the UART port to be used.
@@ -42,7 +45,7 @@ typedef enum {BD_4800=4800,BD_9600=9600,BD_5600=5600, BD_115200=115200}UART_Baud
  	 \param[in]  void.
  	 \return void
  */
-void UART0_Status_IRQHandler(void);
+void UART0_RX_TX_IRQHandler(void);
 
 //
 /********************************************************************************************/
@@ -81,7 +84,7 @@ void UART0_interruptEnable(UART_ChannelType uartChannel);
  	 \return void
  */
 
-void UART_putChar (UART_ChannelType uartChannel, uint8 character);
+void UART_putChar (UART_ChannelType uartChannel, sint8 character);
 /********************************************************************************************/
 /********************************************************************************************/
 /********************************************************************************************/
@@ -92,6 +95,14 @@ void UART_putChar (UART_ChannelType uartChannel, uint8 character);
  	 \return void
  */
 void UART_putString(UART_ChannelType uartChannel, sint8* string);
-
+/********************************************************************************************/
+/********************************************************************************************/
+/********************************************************************************************/
+/*!
+ 	 \brief	 It receives a character through the serial port.
+ 	 \param[in]  uartChannel indicates the UART channel.
+ 	 \return character received
+ */
+uint8 UART_getChar(UART_ChannelType uartChannel);
 #endif /* UART_H_ */
 

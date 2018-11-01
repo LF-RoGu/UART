@@ -11,6 +11,7 @@
 #include "MK64F12.h" /* include peripheral declarations */
 #include "UART.h"/**UART device driver*/
 #include "NVIC.h"/**NVIC device driver*/
+#include <stdio.h>
 
 #define DEBUG
 
@@ -50,23 +51,22 @@ int main(void)
 	UART_putString(UART_0, "Micros y DSPs\r");
 	/** VT100 command for positioning the cursor in x and y position*/
 	UART_putString(UART_0,"\033[11;10H");
-	UART_putString(UART_0, "    ITESO\r");
+	UART_putString(UART_0, "ITESO\r");
 	/** VT100 command for positioning the cursor in x and y position*/
 	UART_putString(UART_0,"\033[12;10H");
 
 	/**Enables interrupts*/
 	EnableInterrupts;
 
-	for(;;) {	   
+	for (;;) {
+		if (UART0_MailBox.flag)
+		{
+			/**Sends to the PCA the received data in the mailbox*/
+			UART_putChar(UART_0, UART0_MailBox.mailBox);
 
-		if(UART0_MailBox.flag)
-			{
-				/**Sends to the PCA the received data in the mailbox*/
-				UART_putChar (UART_0, UART0_MailBox.mailBox);
-
-				/**clear the reception flag*/
-				UART0_MailBox.flag =0;
-			}
+			/**clear the reception flag*/
+			UART0_MailBox.flag = 0;
+		}
 	}
 	
 	return 0;
